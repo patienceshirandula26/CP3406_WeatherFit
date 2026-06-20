@@ -21,7 +21,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,6 +52,7 @@ fun UtilityAppPreview() {
 @Composable
 fun UtilityApp() {
     var selectedTab by remember { mutableStateOf("Utility") }
+    var useFahrenheit by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
@@ -74,20 +74,30 @@ fun UtilityApp() {
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
-                "Utility" -> UtilityScreen()
-                "Settings" -> SettingsScreen()
+                "Utility" -> UtilityScreen(useFahrenheit = useFahrenheit)
+                "Settings" -> SettingsScreen(
+                    useFahrenheit = useFahrenheit,
+                    onUnitChanged = { useFahrenheit = it}
+                )
             }
         }
     }
 }
 
 @Composable
-fun UtilityScreen() {
+fun UtilityScreen(useFahrenheit: Boolean) {
 
     // Temporary weather values.
     // These will later come from an API.
     val city = "Brisbane"
-    val temperature = "22°C"
+    val celsiusTemperature = 22
+    val fahrenheitTemperature = (celsiusTemperature * 9 / 5) + 32
+    val temperature = if (useFahrenheit) {
+        "$fahrenheitTemperature°F"
+    } else {
+        "$celsiusTemperature°C"
+    }
+
     val condition = "Cloudy"
     val sweaterAdvice = "Light sweater recommended"
     val umbrellaAdvice = "Umbrella not needed"
@@ -140,13 +150,41 @@ fun UtilityScreen() {
 }
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(
+    useFahrenheit: Boolean,
+    onUnitChanged: (Boolean) -> Unit
+) {
     Column(
-        Modifier
+        modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp), Arrangement.spacedBy(16.dp)
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Settings Screen", style = MaterialTheme.typography.headlineMedium)
-        Text("This is where you can add toggles or preferences.")
+        Text(
+            text = "Settings",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Text(
+            text = "Temperature Unit",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Button(
+            onClick = { onUnitChanged(false) }
+        ) {
+            Text("Use Celsius °C")
+        }
+
+        Button(
+            onClick = { onUnitChanged(true) }
+        ) {
+            Text("Use Fahrenheit °F")
+        }
+
+        Text(
+            text = "Current unit: ${if (useFahrenheit) "Fahrenheit" else "Celsius"}",
+            style = MaterialTheme.typography.bodyLarge
+        )
     }
 }
