@@ -1,5 +1,5 @@
 package au.edu.jcu.cp3406_cp5307_utilityappstartertemplate
-
+//imports
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -83,7 +83,14 @@ fun UtilityApp() {
 
 @Composable
 fun UtilityScreen() {
-    var counter by remember { mutableIntStateOf(0) }
+
+    // Temporary weather values.
+    // These will later come from an API.
+    val city = "Brisbane"
+    val temperature = "22°C"
+    val condition = "Cloudy"
+    val sweaterAdvice = "Light sweater recommended"
+    val umbrellaAdvice = "Umbrella not needed"
 
     Column(
         modifier = Modifier
@@ -91,11 +98,43 @@ fun UtilityScreen() {
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Utility Screen", style = MaterialTheme.typography.headlineMedium)
-        Text("Counter: $counter", style = MaterialTheme.typography.bodyLarge)
 
-        Button(onClick = { counter++ }) {
-            Text("Increment")
+        Text(
+            text = "WeatherFit",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Text(
+            text = city,
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        Text(
+            text = temperature,
+            style = MaterialTheme.typography.displaySmall
+        )
+
+        Text(
+            text = "Condition: $condition",
+            style = MaterialTheme.typography.bodyLarge
+        )
+
+        Text(
+            text = "🧥 $sweaterAdvice",
+            style = MaterialTheme.typography.bodyLarge
+        )
+
+        Text(
+            text = "☂️ $umbrellaAdvice",
+            style = MaterialTheme.typography.bodyLarge
+        )
+
+        Button(
+            onClick = {
+                // API refresh functionality will be added later.
+            }
+        ) {
+            Text("Refresh Weather")
         }
     }
 }
