@@ -104,10 +104,6 @@ fun UtilityScreen(useFahrenheit: Boolean) {
     val condition = "Cloudy"
     val feelsLike = if (useFahrenheit) "69°F" else "21°C"
     val humidity = "65%"
-    val rainChance = "Low"
-
-    val sweaterAdvice = "Light sweater recommended"
-    val umbrellaAdvice = "Umbrella not needed"
 
     Column(
         modifier = Modifier
