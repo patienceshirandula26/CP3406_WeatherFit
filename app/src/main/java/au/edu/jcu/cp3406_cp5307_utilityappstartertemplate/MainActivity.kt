@@ -30,7 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import au.edu.jcu.cp3406_cp5307_utilityappstartertemplate.ui.theme.CP3406_CP5603UtilityAppStarterTemplateTheme
-
+import androidx.lifecycle.viewmodel.compose.viewModel
+import viewmodel.WeatherUiState
+import viewmodel.WeatherViewModel
+import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,6 +60,9 @@ fun UtilityApp() {
     var selectedTab by remember { mutableStateOf("Utility") }
     var useFahrenheit by remember { mutableStateOf(false) }
 
+    val weatherViewModel: WeatherViewModel = viewModel()
+    val weatherUiState = weatherViewModel.uiState
+
     Scaffold(
         bottomBar = {
             NavigationBar {
@@ -77,7 +83,11 @@ fun UtilityApp() {
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             when (selectedTab) {
-                "Utility" -> UtilityScreen(useFahrenheit = useFahrenheit)
+                "Utility" -> UtilityScreen(
+                    useFahrenheit = useFahrenheit,
+                    weatherUiState = weatherUiState,
+                    onRefreshWeather = { weatherViewModel.refreshWeather() }
+                )
                 "Settings" -> SettingsScreen(
                     useFahrenheit = useFahrenheit,
                     onUnitChanged = { useFahrenheit = it}
@@ -88,22 +98,41 @@ fun UtilityApp() {
 }
 
 @Composable
-fun UtilityScreen(useFahrenheit: Boolean) {
+fun UtilityScreen(
+    useFahrenheit: Boolean,
+    weatherUiState: WeatherUiState,
+    onRefreshWeather: () -> Unit
+) {
 
-    // Temporary weather values.
-    // These will later come from the weather API.
-    val city = "Brisbane"
-    val celsiusTemperature = 22
+    val city = weatherUiState.city
+
+    val celsiusTemperature = weatherUiState.temperature.roundToInt()
+
     val fahrenheitTemperature = (celsiusTemperature * 9 / 5) + 32
+
     val temperature = if (useFahrenheit) {
         "$fahrenheitTemperature°F"
     } else {
         "$celsiusTemperature°C"
     }
 
-    val condition = "Cloudy"
-    val feelsLike = if (useFahrenheit) "69°F" else "21°C"
-    val humidity = "65%"
+    val condition = weatherUiState.condition
+
+    val feelsLikeCelsius = weatherUiState.apparentTemperature.roundToInt()
+
+    val feelsLikeFahrenheit = (feelsLikeCelsius * 9 / 5) + 32
+
+    val feelsLike = if (useFahrenheit) {
+        "$feelsLikeFahrenheit°F"
+    } else {
+        "$feelsLikeCelsius°C"
+    }
+
+    val humidity = "${weatherUiState.humidity}%"
+
+    val sweaterAdvice = weatherUiState.sweaterAdvice
+
+    val umbrellaAdvice = weatherUiState.umbrellaAdvice
 
     Column(
         modifier = Modifier
@@ -150,7 +179,7 @@ fun UtilityScreen(useFahrenheit: Boolean) {
                 )
 
                 Text(
-                    text = "🧥 Top layer: Light sweater or cardigan",
+                    text = "🧥 $sweaterAdvice",
                     style = MaterialTheme.typography.bodyLarge
                 )
 
@@ -165,7 +194,7 @@ fun UtilityScreen(useFahrenheit: Boolean) {
                 )
 
                 Text(
-                    text = "☂️ Extra: Umbrella not needed",
+                    text = "☂️ $umbrellaAdvice",
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -183,29 +212,19 @@ fun UtilityScreen(useFahrenheit: Boolean) {
                     style = MaterialTheme.typography.titleMedium
                 )
 
-                Text(
-                    text = "☀️ Tomorrow: 24°C",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-                Text(
-                    text = "🌧️ Tuesday: 20°C",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-                Text(
-                    text = "⛅ Wednesday: 23°C",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                weatherUiState.forecast.forEach { item ->
+                    Text(
+                        text = "${item.icon} ${item.day}: ${item.temperature}°C",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
         }
 
 
         Button(
             modifier = Modifier.fillMaxWidth(),
-            onClick = {
-                // API refresh functionality will be added later.
-            }
+            onClick = onRefreshWeather
         ) {
             Text("Refresh Weather")
         }
