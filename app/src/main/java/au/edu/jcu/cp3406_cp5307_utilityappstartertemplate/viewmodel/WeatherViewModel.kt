@@ -1,13 +1,13 @@
-package viewmodel
+package au.edu.jcu.cp3406_cp5307_utilityappstartertemplate.viewmodel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import au.edu.jcu.cp3406_cp5307_utilityappstartertemplate.network.NetworkModule
+import au.edu.jcu.cp3406_cp5307_utilityappstartertemplate.repository.WeatherRepository
 import kotlinx.coroutines.launch
-import network.NetworkModule
-import repository.WeatherRepository
 import kotlin.math.roundToInt
 
 data class ForecastItem(

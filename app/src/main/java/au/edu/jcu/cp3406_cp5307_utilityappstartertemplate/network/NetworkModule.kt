@@ -1,4 +1,4 @@
-package network
+package au.edu.jcu.cp3406_cp5307_utilityappstartertemplate.network
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

@@ -1,10 +1,11 @@
 package au.edu.jcu.cp3406_cp5307_utilityappstartertemplate
-//imports
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,8 +15,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Thermostat
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -25,11 +30,13 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,10 +44,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import au.edu.jcu.cp3406_cp5307_utilityappstartertemplate.ui.theme.WeatherFitTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
-import viewmodel.WeatherUiState
-import viewmodel.WeatherViewModel
+import au.edu.jcu.cp3406_cp5307_utilityappstartertemplate.ui.theme.WeatherFitTheme
+import au.edu.jcu.cp3406_cp5307_utilityappstartertemplate.util.AlertSoundPlayer
+import au.edu.jcu.cp3406_cp5307_utilityappstartertemplate.viewmodel.WeatherUiState
+import au.edu.jcu.cp3406_cp5307_utilityappstartertemplate.viewmodel.WeatherViewModel
 import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
@@ -48,25 +56,46 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            WeatherFitTheme {
-                UtilityApp()
+            // ThemeMode lives here (outside UtilityApp) because it controls
+            // the WeatherFitTheme wrapper itself, not just content inside it.
+            var themeMode by rememberSaveable { mutableStateOf(ThemeMode.SYSTEM) }
+            val useDarkTheme = when (themeMode) {
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+            }
+
+            WeatherFitTheme(darkTheme = useDarkTheme) {
+                UtilityApp(
+                    themeMode = themeMode,
+                    onThemeModeChange = { themeMode = it }
+                )
             }
         }
     }
 }
 
+/** User's appearance preference. SYSTEM follows the device's day/night setting. */
+enum class ThemeMode { SYSTEM, LIGHT, DARK }
+
 @Preview(showBackground = true)
 @Composable
 fun UtilityAppPreview() {
     WeatherFitTheme {
-        UtilityApp()
+        UtilityApp(themeMode = ThemeMode.SYSTEM, onThemeModeChange = {})
     }
 }
 
 @Composable
-fun UtilityApp() {
-    var selectedTab by remember { mutableStateOf("Utility") }
-    var useFahrenheit by remember { mutableStateOf(false) }
+fun UtilityApp(
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit
+) {
+    // rememberSaveable (not remember) so these survive screen rotation instead
+    // of silently resetting to their defaults.
+    var selectedTab by rememberSaveable { mutableStateOf("Utility") }
+    var useFahrenheit by rememberSaveable { mutableStateOf(false) }
+    var soundAlertEnabled by rememberSaveable { mutableStateOf(true) }
 
     val weatherViewModel: WeatherViewModel = viewModel()
     val weatherUiState = weatherViewModel.uiState
@@ -93,12 +122,17 @@ fun UtilityApp() {
             when (selectedTab) {
                 "Utility" -> UtilityScreen(
                     useFahrenheit = useFahrenheit,
+                    soundAlertEnabled = soundAlertEnabled,
                     weatherUiState = weatherUiState,
                     onRefreshWeather = { weatherViewModel.refreshWeather() }
                 )
                 "Settings" -> SettingsScreen(
                     useFahrenheit = useFahrenheit,
-                    onUnitChanged = { useFahrenheit = it }
+                    onUnitChanged = { useFahrenheit = it },
+                    themeMode = themeMode,
+                    onThemeModeChange = onThemeModeChange,
+                    soundAlertEnabled = soundAlertEnabled,
+                    onSoundAlertChanged = { soundAlertEnabled = it }
                 )
             }
         }
@@ -108,6 +142,7 @@ fun UtilityApp() {
 @Composable
 fun UtilityScreen(
     useFahrenheit: Boolean,
+    soundAlertEnabled: Boolean,
     weatherUiState: WeatherUiState,
     onRefreshWeather: () -> Unit
 ) {
@@ -128,6 +163,15 @@ fun UtilityScreen(
     val sweaterAdvice = weatherUiState.sweaterAdvice
     val umbrellaAdvice = weatherUiState.umbrellaAdvice
 
+    // Play the alert at most once per condition change, not on every recomposition.
+    var alertPlayedFor by rememberSaveable { mutableStateOf("") }
+    LaunchedEffect(condition, soundAlertEnabled) {
+        if (soundAlertEnabled && condition.contains("storm", ignoreCase = true) && alertPlayedFor != condition) {
+            AlertSoundPlayer.playSevereWeatherAlert()
+            alertPlayedFor = condition
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -135,7 +179,6 @@ fun UtilityScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
 
-        // Gradient hero banner instead of plain text
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -233,41 +276,115 @@ fun UtilityScreen(
 @Composable
 fun SettingsScreen(
     useFahrenheit: Boolean,
-    onUnitChanged: (Boolean) -> Unit
+    onUnitChanged: (Boolean) -> Unit,
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
+    soundAlertEnabled: Boolean,
+    onSoundAlertChanged: (Boolean) -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Text(text = "Settings", style = MaterialTheme.typography.headlineMedium)
-        Text(text = "Temperature Unit", style = MaterialTheme.typography.titleMedium)
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (!useFahrenheit) {
-                Button(onClick = { onUnitChanged(false) }, shape = RoundedCornerShape(16.dp)) {
-                    Text("Celsius °C")
+        // ---- Temperature unit ----
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Icon(Icons.Default.Thermostat, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Text(
+                        text = "  Temperature Unit",
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
-            } else {
-                OutlinedButton(onClick = { onUnitChanged(false) }, shape = RoundedCornerShape(16.dp)) {
-                    Text("Celsius °C")
+                Text(
+                    text = "Choose how temperatures are shown across the app.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (!useFahrenheit) {
+                        Button(onClick = { onUnitChanged(false) }, shape = RoundedCornerShape(16.dp)) {
+                            Text("Celsius °C")
+                        }
+                    } else {
+                        OutlinedButton(onClick = { onUnitChanged(false) }, shape = RoundedCornerShape(16.dp)) {
+                            Text("Celsius °C")
+                        }
+                    }
+                    if (useFahrenheit) {
+                        Button(onClick = { onUnitChanged(true) }, shape = RoundedCornerShape(16.dp)) {
+                            Text("Fahrenheit °F")
+                        }
+                    } else {
+                        OutlinedButton(onClick = { onUnitChanged(true) }, shape = RoundedCornerShape(16.dp)) {
+                            Text("Fahrenheit °F")
+                        }
+                    }
                 }
             }
-            if (useFahrenheit) {
-                Button(onClick = { onUnitChanged(true) }, shape = RoundedCornerShape(16.dp)) {
-                    Text("Fahrenheit °F")
+        }
+
+        // ---- Appearance ----
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (themeMode == ThemeMode.DARK) Icons.Default.DarkMode else Icons.Default.LightMode,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(text = "  Appearance", style = MaterialTheme.typography.titleMedium)
                 }
-            } else {
-                OutlinedButton(onClick = { onUnitChanged(true) }, shape = RoundedCornerShape(16.dp)) {
-                    Text("Fahrenheit °F")
+                Text(
+                    text = "Override the app's light/dark mode, or follow your device setting.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ThemeMode.entries.forEach { mode ->
+                        if (themeMode == mode) {
+                            Button(onClick = { onThemeModeChange(mode) }, shape = RoundedCornerShape(16.dp)) {
+                                Text(mode.name.lowercase().replaceFirstChar { it.uppercase() })
+                            }
+                        } else {
+                            OutlinedButton(onClick = { onThemeModeChange(mode) }, shape = RoundedCornerShape(16.dp)) {
+                                Text(mode.name.lowercase().replaceFirstChar { it.uppercase() })
+                            }
+                        }
+                    }
                 }
+            }
+        }
+
+        // ---- Severe weather sound alert ----
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Icon(Icons.Default.VolumeUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Text(text = "  Severe Weather Sound Alert", style = MaterialTheme.typography.titleMedium)
+                    }
+                    Text(
+                        text = "Play a short alert tone when a thunderstorm is forecast.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 6.dp)
+                    )
+                }
+                Switch(checked = soundAlertEnabled, onCheckedChange = onSoundAlertChanged)
             }
         }
 
         Text(
             text = "Current unit: ${if (useFahrenheit) "Fahrenheit" else "Celsius"}",
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary
         )
     }
