@@ -1,6 +1,5 @@
 package au.edu.jcu.cp3406_cp5307_utilityappstartertemplate.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -12,32 +11,58 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = SkyBlueDark,
+    onPrimary = OceanBlue,
+    primaryContainer = SkyBlueDarkContainer,
+    onPrimaryContainer = SkyBlueContainer,
+
+    secondary = SunshineYellowDark,
+    onSecondary = HoneyBrown,
+    secondaryContainer = SunshineYellowDarkContainer,
+    onSecondaryContainer = SunshineYellowContainer,
+
+    tertiary = MintRainDark,
+    onTertiary = DeepTeal,
+    tertiaryContainer = MintRainDarkContainer,
+    onTertiaryContainer = MintRainContainer,
+
+    background = NightBackground,
+    onBackground = MoonText,
+    surface = NightSurface,
+    onSurface = MoonText
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = SkyBlue,
+    onPrimary = CardWhite,
+    primaryContainer = SkyBlueContainer,
+    onPrimaryContainer = OceanBlue,
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    secondary = HoneyBrown,
+    onSecondary = CardWhite,
+    secondaryContainer = SunshineYellowContainer,
+    onSecondaryContainer = HoneyBrown,
+
+    tertiary = MintRain,
+    onTertiary = CardWhite,
+    tertiaryContainer = MintRainContainer,
+    onTertiaryContainer = DeepTeal,
+
+    background = CreamBackground,
+    onBackground = InkText,
+    surface = CardWhite,
+    onSurface = InkText
 )
 
+/**
+ * App-wide Material 3 theme for WeatherFit. dynamicColor defaults to false
+ * so the app always shows the hand-picked "Sunny Sky" palette that matches
+ * the launcher icon, rather than the user's wallpaper colours.
+ */
 @Composable
-fun CP3406_CP5603UtilityAppStarterTemplateTheme(
+fun WeatherFitTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -45,7 +70,6 @@ fun CP3406_CP5603UtilityAppStarterTemplateTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
