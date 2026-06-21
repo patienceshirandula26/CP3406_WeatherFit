@@ -1,55 +1,134 @@
-# Utility App Starter – CP3406 / CP5307
+# WeatherFit 🌦️
 
-This is a basic Android app template for **Assessment 1: Utility App** in CP3406/CP5603..  
-It provides the structure for a simple tabular UI using **Jetpack Compose** and **Material Design 3**.
+## Overview
+
+WeatherFit is a utility-style Android application developed for **CP3406 Mobile Computing**.
+
+The application provides real-time weather information and clothing recommendations to help users quickly decide what to wear before leaving home. By combining live weather data with practical outfit suggestions, WeatherFit delivers focused, at-a-glance information that supports everyday decision-making.
 
 ---
 
 ## Getting Started
 
 ### How to Run
-1. Clone or download this repo  
-2. Open in Android Studio  
-3. Run on an emulator or physical device (API 26+ recommended)  
+
+1. Clone or download this repository.
+2. Open the project in Android Studio.
+3. Allow Gradle to sync all dependencies.
+4. Run the application on an Android emulator or physical Android device (API 26+ recommended).
 
 ---
 
-## Composables
+## Features
 
-### UtilityApp()
-- Contains the screen layout using a Scaffold
-- Toggles content between Utility and Settings
+### Current Weather
 
-### UtilityScreen()
-- Displays a simple counter (replace with your utility logic)  
-- Includes a button to increment the counter
+* Displays current temperature.
+* Displays current weather conditions.
+* Displays feels-like temperature.
+* Displays humidity information.
+* Retrieves live weather data from the Open-Meteo API.
 
-### SettingsScreen()
-- Placeholder for user preferences or configuration  
-- Can be extended to modify main screen behavior (e.g., theme, units, limits)  
+### Fit Check
+
+* Provides clothing recommendations based on current weather conditions.
+* Suggests appropriate outerwear.
+* Suggests suitable footwear.
+* Provides umbrella recommendations during wet weather conditions.
+
+### 3-Day Forecast
+
+* Displays forecast temperatures for upcoming days.
+* Displays weather condition icons.
+* Provides users with a quick overview of upcoming weather trends.
+
+### Settings
+
+* Toggle between Celsius and Fahrenheit temperature units.
+* Select appearance preferences (System, Light, or Dark mode).
+* Enable or disable severe weather sound alerts.
+
+---
+
+## Technologies Used
+
+| Component               | Technology                       |
+| ----------------------- | -------------------------------- |
+| Programming Language    | Kotlin                           |
+| User Interface          | Jetpack Compose                  |
+| Design Framework        | Material Design 3                |
+| Architecture            | ViewModel and Repository Pattern |
+| Networking              | Retrofit                         |
+| Weather Service         | Open-Meteo API                   |
+| Development Environment | Android Studio                   |
+
+---
+
+## App Architecture
+
+WeatherFit follows a modern Android architecture to separate presentation, business logic, and data retrieval responsibilities.
+
+```text
+UI (Jetpack Compose)
+        ↓
+WeatherViewModel
+        ↓
+WeatherRepository
+        ↓
+Retrofit API Service
+        ↓
+Open-Meteo API
+```
+
+### Architecture Components
+
+#### UI Layer
+
+The user interface is built using Jetpack Compose and is responsible for displaying weather information, forecasts, outfit recommendations, and settings.
+
+#### ViewModel Layer
+
+The ViewModel manages application state and prepares weather information for display within the user interface.
+
+#### Repository Layer
+
+The Repository acts as an intermediary between the ViewModel and the weather service, managing data retrieval operations.
+
+#### API Layer
+
+Retrofit is used to communicate with the Open-Meteo API and retrieve weather data from the internet.
 
 ---
 
 ## Key Concepts Covered
 
-| Week | Concept                        | Used In                          |
-|------|--------------------------------|----------------------------------|
-| 1    | Kotlin + Android Studio         | MainActivity.kt |
-| 2    | Jetpack Compose Layouts         | UtilityApp(), UtilityScreen(), SettingsScreen()   |
-| 3    | Material Design 3               | CP3406_CP5603UtilityAppStarterTemplateTheme, MaterialTheme.typography |
-| 4    | ViewModel | Not included in starter          |
-| 5    | Retrofit  | Not included in starter          |
+| Week   | Concept                   | Implementation                            |
+| ------ | ------------------------- | ----------------------------------------- |
+| Week 1 | Kotlin and Android Studio | MainActivity and project setup            |
+| Week 2 | Jetpack Compose Layouts   | Utility Screen and Settings Screen        |
+| Week 3 | Material Design 3         | WeatherFit custom UI theme and styling    |
+| Week 4 | ViewModel Architecture    | WeatherViewModel                          |
+| Week 5 | Retrofit API Integration  | Open-Meteo weather service implementation |
 
 ---
 
-## Suggested Extensions
-- Replace counter with a real utility (e.g., hydration tracker, timer)  
-- Add a ViewModel for state management  
-- Use SharedPreferences or DataStore to persist settings  
-- Add a simple API call using Retrofit (e.g., fetch weather or quotes)  
+## Future Improvements
+
+Potential future enhancements include:
+
+* GPS-based location detection.
+* Support for multiple cities.
+* Persistent user preferences using DataStore.
+* Extended weather forecasts.
+* Additional clothing recommendation categories.
+* Weather notifications and alerts.
 
 ---
 
-## 📚 License
-This template is provided for educational use in CP3406.  
-Feel free to modify and extend it for your assessment.
+## Author
+
+**Patience Shirandula**
+
+CP3406 Mobile Computing
+
+James Cook University
